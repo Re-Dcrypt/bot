@@ -25,7 +25,7 @@ async def connect(username_site, id):
 
 @bot.command(
     name="verify",
-    description="If you have connected your discord account with the site but still not got verified here, use this command to verify your account.",
+    description="If you have connected ur discord account but still aren't verified here, use this command to verify",
     scope=GUILD_ID,
 )
 async def verify(ctx: interactions.CommandContext):
