@@ -76,4 +76,50 @@ async def verify(ctx: interactions.CommandContext):
     else:
         await ctx.send("Something went wrong. Please try again later", ephemeral=True)
 
+
+@bot.command(
+    name="profile",
+    description="Your Profile",
+    scope=int(GUILD_ID),
+    options = [
+        interactions.Option(
+            name="user",
+            description="User",
+            type=interactions.OptionType.USER,
+            required=False,
+        ),
+    ],    
+
+)
+async def profile(ctx: interactions.CommandContext, user: interactions.User = None):
+    if user is None:
+        id=ctx.author.id
+    else:
+        id=user.id
+    url = base_url + "/profile/" + str(id)
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(title="Error", description=f"Could not find profile of <@{id}>", color=0xFF0000)
+        await ctx.send(embeds=[embed_error])
+    else:
+        embed=interactions.Embed(title="Profile", color=0x00d2d2)
+        embed.add_field("Username", f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})", inline=False)
+        try:
+            embed.add_field("Name", response.json()["name"], inline=False)
+        except KeyError:
+            pass
+        except Exception as e:
+            print(e)
+        try:
+            embed.add_field("Organization", response.json()["organization"], inline=False)
+        except KeyError:
+            pass
+        except Exception as e:
+            print(e)
+        embed.add_field("Score", response.json()["score"], inline=True)
+        embed.add_field("Level", response.json()["current_level"], inline=True)
+        embed.add_field("Rank", response.json()["rank"], inline=True)
+        await ctx.send(embeds=embed)
+
 bot.start()
