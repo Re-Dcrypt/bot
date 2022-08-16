@@ -1,0 +1,2 @@
+python-dotenv==0.20.0
+interactions-fastapi==0.0.1
