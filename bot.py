@@ -3,6 +3,7 @@ import interactions
 from interactions.ext.fastapi import setup
 from os import getenv
 from dotenv import load_dotenv
+from fastapi import Request
 load_dotenv()
 import requests
 intents = interactions.Intents.ALL
@@ -18,16 +19,45 @@ async def index():
     return {"Logged in as ": bot.user.name}
 
 @api.post("/connect/discord/{username_site}/{id}")
-async def connect(username_site, id):
-    for guild in bot.guilds:
-        if guild.id == GUILD_ID:
-            break
-    member = await guild.get_member(int(id))
-    username=member.user.username
-    new_nickname=f"✔️{username} - {username_site}"
-    await member.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
-    return {"status": "changing"}
+async def connect(request: Request, username_site, id):
+    header = request.headers.get('Authorization')
+    if header != AuthenticationKey:
+        return {"status": "unauthorized"}
+    else:    
+        for guild in bot.guilds:
+            if guild.id == GUILD_ID:
+                break
+        member = await guild.get_member(int(id))
+        username=member.user.username
+        new_nickname=f"✔️{username} - {username_site}"
+        await member.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
+        return {"status": "changing"}
 
+
+@api.post('/level/complete/{id}/{completed_lvl}')
+async def complete_level(request: Request, id, completed_lvl):
+    header = request.headers.get('Authorization')
+    if header != AuthenticationKey:
+        return {"status": "unauthorized"}
+    else:
+        for guild in bot.guilds:
+            if guild.id == int(GUILD_ID):
+                break
+        member = await guild.get_member(int(id))
+        for roles in guild.roles:
+            if roles.name == f"Lvl {completed_lvl}":
+                try:
+                    await member.remove_role(roles, guild_id=int(GUILD_ID))
+                except Exception as e:
+                    print(e)
+                pass
+            elif roles.name == f"Lvl {int(completed_lvl)+1}":
+                try:
+                    await member.add_role(roles, guild_id=int(GUILD_ID))
+                except Exception as e:
+                    print(e)
+                break
+        return {"status": "Done"}
 
 @bot.command(
     name="verify",
