@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 from fastapi import Request
 load_dotenv()
 import requests
+from interactions.ext.paginator import Page, Paginator
+
+
 intents = interactions.Intents.ALL
 bot = interactions.Client(getenv("TOKEN"), intents=intents)
 api = setup(bot)
@@ -99,6 +102,8 @@ async def profile(ctx: interactions.CommandContext, user: interactions.User = No
     url = base_url + "/profile/" + str(id)
     headers = {"Authorization": AuthenticationKey}
     response = requests.get(url, headers=headers)
+    button=interactions.Button(text="Profile", style=interactions.ButtonStyle.LINK, label="Profile", url=f"{base_url}/profile/{response.json()['username']}")
+
     if response.status_code != 200:
         embed_error = interactions.Embed(title="Error", description=f"Could not find profile of <@{id}>", color=0xFF0000)
         await ctx.send(embeds=[embed_error])
@@ -120,6 +125,131 @@ async def profile(ctx: interactions.CommandContext, user: interactions.User = No
         embed.add_field("Score", response.json()["score"], inline=True)
         embed.add_field("Level", response.json()["current_level"], inline=True)
         embed.add_field("Rank", response.json()["rank"], inline=True)
+        embed.set_thumbnail(url=response.json()["avatar_url"])
+        if user is None:
+            pass
+        else:
+            embed.set_footer(text=f"Requested by: {ctx.author}",icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
+        await ctx.send(embeds=embed, components=button)
+
+
+@bot.command(
+    name="leaderboard",
+    description="Leaderboard",
+    scope=int(GUILD_ID))
+async def leaderboard(ctx: interactions.CommandContext):
+    url = base_url + "/leaderboard"
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(title="Error", description=f"Could not find leaderboard", color=0xFF0000)
+        await ctx.send(embeds=[embed_error])
+    else:
+        content = ""
+        for i in range(10):
+            try:
+                content =  content + f"**{i+1}. <@{response.json()[i]['discord_id']}>** \nScore: {response.json()[i]['score']} - Level: {response.json()[i]['current_level']}" + "\n"
+            except KeyError:
+                content =  content + f"**{i+1}. {response.json()[i]['username']}** \nScore:{response.json()[i]['score']} - Level: {response.json()[i]['current_level']}" + "\n"
+            except IndexError as e:
+                break
+            except Exception as e:
+                print(e)
+        button=interactions.Button(text="Leaderboard", style=interactions.ButtonStyle.LINK, label="Leaderboard", url=f"{base_url[:-3]}leaderboard")
+        embed=interactions.Embed(title="Leaderboard", url=f"{base_url[:-3]}leaderboard", description=content, color=0x00d2d2)
+        embed.set_footer(text=f"Requested by: {ctx.author}",icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
+        await ctx.send(embeds=embed, components=button)
+
+@bot.command(
+    name="stats",
+    description="Your Stats",
+    scope=int(GUILD_ID))
+async def stats(ctx: interactions.CommandContext):
+    url = base_url + "/stats/" + str(ctx.author.id)
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(title="Error", description=f"Could not find stats of <@{ctx.author.id}>", color=0xFF0000)
+        await ctx.send(embeds=[embed_error])
+    else:
+        embed=interactions.Embed(title="Stats", color=0x00d2d2)
+        embed.add_field("Username", f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})", inline=False) 
+        content = ""
+        total_count=0
+        for i in response.json()['stats']:
+            content = content + f"Level {i}: {response.json()['stats'][i]}"
+            total_count+=int(response.json()['stats'][i])
+            content = content + "\n"
+        embed.add_field("Score", response.json()['score'], inline=True)
+        embed.add_field("Level", response.json()['current_level'], inline=True)
+        embed.add_field("Stats", content, inline=False)
+        embed.add_field("Total Number of Attempts", total_count, inline=True)
+        embed.set_thumbnail(url=response.json()["avatar_url"])
+        embed.set_footer(text=f"Requested by: {ctx.author}",icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed)
+
+
+@bot.command(
+    name="ban",
+    description="Ban a user",
+    scope=int(GUILD_ID),
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options = [
+        interactions.Option(
+            name="user",
+            description="User",
+            type=interactions.OptionType.USER,
+            required=True,
+        ),
+        interactions.Option(
+            name="reason",
+            description="Reason",
+            type=interactions.OptionType.STRING,
+            required=True)
+    ])
+async def ban(ctx: interactions.CommandContext, user: interactions.Member, reason: str):
+    url = base_url + "/ban/" + str(user.id) + "/" + str(reason)
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.post(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(title="Error", description=f"Could not ban <@{user.id}>", color=0xFF0000)
+        await ctx.send(embeds=[embed_error])
+    else:
+        embed=interactions.Embed(title="Success", description=f"<@{user.id}> has been banned", color=0x00d2d2)
+        embed.set_footer(text=f"Requested by: {ctx.author}",icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
+        await ctx.send(embeds=embed)
+
+
+
+@bot.command(
+    name="unban",
+    description="Unban a user",
+    scope=int(GUILD_ID),
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+    options = [
+        interactions.Option(
+            name="user",
+            description="User",
+            type=interactions.OptionType.USER,
+            required=True,
+        ),
+    ])
+async def unban(ctx: interactions.CommandContext, user: interactions.Member):
+    url = base_url + "/unban/" + str(user.id)
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.post(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(title="Error", description=f"Could not unban <@{user.id}>", color=0xFF0000)
+        await ctx.send(embeds=[embed_error])
+    else:
+        embed=interactions.Embed(title="Success", description=f"<@{user.id}> has been unbanned", color=0x00d2d2)
+        embed.set_footer(text=f"Requested by: {ctx.author}",icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
+        await ctx.send(embeds=embed)
+
 
 bot.start()
