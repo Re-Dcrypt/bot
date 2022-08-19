@@ -1,5 +1,6 @@
 import interactions
 import requests
+import re
 from interactions.ext.fastapi import setup
 from os import getenv
 from dotenv import load_dotenv
@@ -238,7 +239,7 @@ async def stats(ctx: interactions.CommandContext):
         embed.set_author(
             name="Re-Dcrypt",
             icon_url="https://i.imgur.com/LvqKPO7.png")
-        await ctx.send(embeds=embed)
+        await ctx.send(embeds=embed, ephemeral=True)
 
 
 @bot.command(
@@ -321,6 +322,88 @@ async def unban(ctx: interactions.CommandContext, user: interactions.Member):
             name="Re-Dcrypt",
             icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed)
+
+
+@bot.command(
+    name="easteregg",
+    description="Easter Egg",
+    scope=int(GUILD_ID))
+async def easteregg(ctx):
+    modal = interactions.Modal(
+        title="Easter Egg",
+        custom_id="easter_egg",
+        components=[interactions.TextInput(
+            style=interactions.TextStyleType.SHORT,
+            label="Enter the easter egg...",
+            placeholder="Easter Egg",
+            custom_id="easter_egg_input",
+            required=True
+        )],
+    )
+    await ctx.popup(modal)
+
+
+@bot.modal("easter_egg")
+async def modal_response(ctx, easter_egg_input: str):
+    easter_egg_input_filtered = re.sub('[\W_]+', '', easter_egg_input.lower().replace(' ', '').strip())
+    url =  base_url + "/easteregg/" + str(ctx.author.id) + "/" + easter_egg_input_filtered
+    headers = {"Authorization": AuthenticationKey}
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        embed_error = interactions.Embed(
+            title="Error",
+            description=f"Some Error Occured, Try again later.",
+            color=0xFF0000)
+        await ctx.send(embeds=[embed_error], ephemeral=True)
+    else:
+        if response.json()['code'] == "success":
+            embed = interactions.Embed(
+                title="Success",
+                description=f"{response.json()['response']}",
+                color=0x00d2d2)
+            embed.set_footer(
+                text=f"{ctx.author}",
+                icon_url=ctx.author.user.avatar_url)
+            embed.set_author(
+                name="Re-Dcrypt",
+                icon_url="https://i.imgur.com/LvqKPO7.png")
+            await ctx.send(embeds=embed, ephemeral=True)
+        elif response.json()['code'] == "not_found":
+            embed = interactions.Embed(
+                title="Wrong!",
+                description=f"{response.json()['response']}",
+                color=0xFF0000)
+            embed.set_footer(
+                text=f"{ctx.author}",
+                icon_url=ctx.author.user.avatar_url)
+            embed.set_author(
+                name="Re-Dcrypt",
+                icon_url="https://i.imgur.com/LvqKPO7.png")
+            await ctx.send(embeds=embed, ephemeral=True)
+        elif response.json()['code'] == "claimed":
+            embed = interactions.Embed(
+                title="Already Claimed!",
+                description=f"{response.json()['response']}",
+                color=0xFF0000)
+            embed.set_footer(
+                text=f"{ctx.author}",
+                icon_url=ctx.author.user.avatar_url)
+            embed.set_author(
+                name="Re-Dcrypt",
+                icon_url="https://i.imgur.com/LvqKPO7.png")
+            await ctx.send(embeds=embed, ephemeral=True)
+        else:
+            embed = interactions.Embed(
+                title="Error",
+                description=f"Some error occured, try again later.",
+                color=0xFF0000)
+            embed.set_footer(
+                text=f"{ctx.author}",
+                icon_url=ctx.author.user.avatar_url)
+            embed.set_author(
+                name="Re-Dcrypt",
+                icon_url="https://i.imgur.com/LvqKPO7.png")
+            await ctx.send(embeds=embed, ephemeral=True)
 
 
 bot.start()
