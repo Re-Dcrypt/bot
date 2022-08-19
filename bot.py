@@ -74,7 +74,16 @@ async def verify(ctx: interactions.CommandContext):
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         new_nickname = f"✔️{ctx.author.user.username} - {response.json()['Username']}"
+        for guild in bot.guilds:
+            if guild.id == int(GUILD_ID):
+                break
+        roles = interactions.search_iterable(
+            await guild.get_all_roles(),
+            name="Verified")
         await ctx.author.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
+        await ctx.author.add_role(
+            roles[0],
+            guild_id=int(GUILD_ID))        
         await ctx.send(
             "You are verified. Your username on site is: " + str(response.json()["Username"]),
             ephemeral=True)
@@ -405,5 +414,52 @@ async def modal_response(ctx, easter_egg_input: str):
                 icon_url="https://i.imgur.com/LvqKPO7.png")
             await ctx.send(embeds=embed, ephemeral=True)
 
+@bot.command(
+    name="verify_button",
+    description="Verify yourself",
+    scope=int(GUILD_ID),
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+async def verify_button(ctx: interactions.CommandContext):
+    button = interactions.Button(
+        style=interactions.ButtonStyle.PRIMARY,
+        label="Verify",
+        custom_id="verify")
+    embed = interactions.Embed(
+        title="Verify",
+        description="Please verify yourself",
+        color=0x00d2d2)
+    embed.set_author(
+        name="Re-Dcrypt",
+        icon_url="https://i.imgur.com/LvqKPO7.png")
+    await ctx.send(embeds=[embed], components=[button])
+
+
+@bot.component("verify")
+async def button_verify(ctx: interactions.CommandContext):
+    url = base_url+"/verify_discord_id/"+str(ctx.author.id)
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        new_nickname = f"✔️{ctx.author.user.username} - {response.json()['Username']}"
+        for guild in bot.guilds:
+            if guild.id == int(GUILD_ID):
+                break
+        roles = interactions.search_iterable(
+            await guild.get_all_roles(),
+            name="Verified")
+        await ctx.author.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
+        await ctx.author.add_role(
+            roles[0],
+            guild_id=int(GUILD_ID))
+        await ctx.send(
+            "You are verified. Your username on site is: " + str(response.json()["Username"]),
+            ephemeral=True)
+    elif response.status_code == 404:
+        await ctx.send(
+            "Could not find your account. Please connect your discord account to verify",
+            ephemeral=True)
+    else:
+        await ctx.send(
+            "Something went wrong. Please try again later",
+            ephemeral=True)
 
 bot.start()
