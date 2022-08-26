@@ -9,7 +9,14 @@ load_dotenv()
 
 
 intents = interactions.Intents.ALL
-bot = interactions.Client(getenv("TOKEN"), intents=intents)
+bot = interactions.Client(
+    getenv("TOKEN"),
+    intents=intents,
+    presence=interactions.ClientPresence(
+        activities=[
+            interactions.PresenceActivity(
+                name="Re-Dcrypt Cryptic Hunt",
+                type=interactions.PresenceActivityType.WATCHING)]))
 api = setup(bot)
 GUILD_ID = getenv("GUILD_ID")
 base_url = getenv("HOST")
