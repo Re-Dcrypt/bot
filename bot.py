@@ -469,4 +469,40 @@ async def button_verify(ctx: interactions.CommandContext):
             "Something went wrong. Please try again later",
             ephemeral=True)
 
+
+@bot.event(name="on_guild_member_add")
+async def on_guild_member_add(member: interactions.Member):   
+    url = base_url+"/verify_discord_id/"+str(member.id)
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        new_nickname = f"✔️{member.user.username} - {response.json()['Username']}"
+        for guild in bot.guilds:
+            if guild.id == int(GUILD_ID):
+                break
+        roles = interactions.search_iterable(
+            await guild.get_all_roles(),
+            name="Verified")
+        await member.modify(nick=new_nickname[:32])
+        await member.add_role(
+            roles[0],
+            )
+        embed = interactions.Embed(
+            title="Verifed",
+            description="You have been verified through the Re-Dcrypt Website",
+            color=0x00d2d2)
+        embed.add_field(
+            name="Your Username on the website:",
+            value=str(response.json()["Username"]),
+        )
+        embed.set_author(
+            name="Re-Dcrypt",
+            icon_url="https://i.imgur.com/LvqKPO7.png")                    
+        await member.send(
+            embeds=embed
+            )
+    else:
+        pass
+
+
+
 bot.start()
