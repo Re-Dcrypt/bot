@@ -1,3 +1,4 @@
+from ssl import Options
 import interactions
 import requests
 import re
@@ -504,5 +505,21 @@ async def on_guild_member_add(member: interactions.Member):
         pass
 
 
+@bot.command(
+    name="create_invite",
+    description="Create an invite",
+    scope=int(GUILD_ID),
+    options = [ 
+        interactions.Option(
+            name="channel",
+            description="Channel to create invite in",
+            type=interactions.OptionType.CHANNEL,
+            required=True,
+        )
+    ],
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+async def create_invite(ctx: interactions.CommandContext, channel):
+    code = await channel.create_invite(max_age=0, max_uses=0)
+    await ctx.send(f"Invite created in {channel.mention}: https://discord.com/invite/{code.code}", ephemeral=True)
 
 bot.start()
