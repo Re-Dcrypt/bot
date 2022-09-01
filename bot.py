@@ -18,7 +18,7 @@ bot = interactions.Client(
             interactions.PresenceActivity(
                 name="Re-Dcrypt Cryptic Hunt",
                 type=interactions.PresenceActivityType.WATCHING)]))
-api = setup(bot)
+api = setup(bot, port="3000")
 GUILD_ID = getenv("GUILD_ID")
 base_url = getenv("HOST")
 AuthenticationKey = getenv("AUTHENTICATION_KEY")
