@@ -1,4 +1,3 @@
-from ssl import Options
 import interactions
 import requests
 import re
