@@ -26,7 +26,7 @@ headers = {"Authorization": AuthenticationKey}
 
 @api.get("/")
 async def index():
-    return {"Logged in as ": bot.user.name}
+    return {"Hello World"}
 
 
 @api.post("/connect/discord/{username_site}/{id}")
