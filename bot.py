@@ -521,4 +521,20 @@ async def create_invite(ctx: interactions.CommandContext, channel):
     code = await channel.create_invite(max_age=0, max_uses=0)
     await ctx.send(f"Invite created in {channel.mention}: https://discord.com/invite/{code.code}", ephemeral=True)
 
+
+@bot.command(
+    name="update_ranks",
+    description="Update the ranks of the members",
+    scope=int(GUILD_ID),
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR
+)
+async def update_ranks(ctx: interactions.CommandContext):
+    url = base_url + "/update_rank_all"
+    response = requests.post(url, headers=headers)
+    if response.status_code == 200:
+        await ctx.send("Updating Ranks", ephemeral=True)
+    else:
+        await ctx.send(f"Update Ranks failed\nError:\n{response.json}", ephemeral=True)
+
+
 bot.start()
