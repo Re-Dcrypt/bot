@@ -537,4 +537,19 @@ async def update_ranks(ctx: interactions.CommandContext):
         await ctx.send(f"Update Ranks failed\nError:\n{response.json}", ephemeral=True)
 
 
+@bot.command(
+    name="backup",
+    description="Backup the database",
+    scope=int(GUILD_ID),
+    default_member_permissions=interactions.Permissions.ADMINISTRATOR
+)
+async def backup(ctx: interactions.CommandContext):
+    url = base_url + "/backup"
+    response = requests.post(url, headers=headers)
+    if response.status_code == 200:
+        await ctx.send("Backing Up", ephemeral=True)
+    else:
+        await ctx.send(f"Backup failed\nError:\n{response.json}", ephemeral=True)
+
+
 bot.start()
