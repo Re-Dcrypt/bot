@@ -523,6 +523,55 @@ async def create_invite(ctx: interactions.CommandContext, channel):
 
 
 @bot.command(
+	name="verify_someone",
+	description="verify a user",
+	scope=int(GUILD_ID),
+	default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+	options = [
+		interactions.Option(
+			name="member",
+			description="user to verify",
+			type=interactions.OptionType.USER,
+   			required=True
+		)
+	]
+)
+async def verify_someone(ctx: interactions.CommandContext, member: interactions.Member):
+
+    url = base_url+"/verify_discord_id/"+str(member.id)
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        new_nickname = f"✔️{member.user.username} - {response.json()['Username']}"
+        for guild in bot.guilds:
+            if guild.id == int(GUILD_ID):
+                break
+        roles = interactions.search_iterable(
+            await guild.get_all_roles(),
+            name="Verified")
+        await member.modify(guild_id=int(GUILD_ID),nick=new_nickname[:32])
+        await member.add_role(guild_id=int(GUILD_ID),role=
+            roles[0],
+            )
+        embed = interactions.Embed(
+            title="Verifed",
+            description="You have been verified through the Re-Dcrypt Website",
+            color=0x00d2d2)
+        embed.add_field(
+            name="Your Username on the website:",
+            value=str(response.json()["Username"]),
+        )
+        embed.set_author(
+            name="Re-Dcrypt",
+            icon_url="https://i.imgur.com/LvqKPO7.png")                    
+        await ctx.send(
+            embeds=embed
+            )
+    else:
+        await ctx.send("Error")
+	
+
+
+@bot.command(
     name="update_ranks",
     description="Update the ranks of the members",
     scope=int(GUILD_ID),
