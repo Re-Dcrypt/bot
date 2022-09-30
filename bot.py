@@ -5,22 +5,23 @@ from interactions.ext.fastapi import setup
 from os import getenv
 from dotenv import load_dotenv
 from fastapi import Request
-load_dotenv()
 
+load_dotenv()
 
 intents = interactions.Intents.ALL
 bot = interactions.Client(
     getenv("TOKEN"),
     intents=intents,
-    presence=interactions.ClientPresence(
-        activities=[
-            interactions.PresenceActivity(
-                name="Re-Dcrypt Cryptic Hunt",
-                type=interactions.PresenceActivityType.WATCHING)]))
+    presence=interactions.ClientPresence(activities=[
+        interactions.PresenceActivity(
+            name="Re-Dcrypt Cryptic Hunt",
+            type=interactions.PresenceActivityType.WATCHING)
+    ]))
 api = setup(bot, host="0.0.0.0", port=3000)
 GUILD_ID = getenv("GUILD_ID")
 base_url = getenv("HOST")
 AuthenticationKey = getenv("AUTHENTICATION_KEY")
+API_Cron = getenv("API_Cron")
 headers = {"Authorization": AuthenticationKey}
 
 
@@ -73,35 +74,32 @@ async def complete_level(request: Request, id, completed_lvl):
 
 @bot.command(
     name="verify",
-    description="If you have connected ur discord account but still aren't verified here, use this command to verify",
+    description=
+    "If you have connected ur discord account but still aren't verified here, use this command to verify",
     scope=int(GUILD_ID),
 )
 async def verify(ctx: interactions.CommandContext):
-    url = base_url+"/verify_discord_id/"+str(ctx.author.id)
+    url = base_url + "/verify_discord_id/" + str(ctx.author.id)
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         new_nickname = f"✔️{ctx.author.user.username} - {response.json()['Username']}"
         for guild in bot.guilds:
             if guild.id == int(GUILD_ID):
                 break
-        roles = interactions.search_iterable(
-            await guild.get_all_roles(),
-            name="Verified")
+        roles = interactions.search_iterable(await guild.get_all_roles(),
+                                             name="Verified")
         await ctx.author.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
-        await ctx.author.add_role(
-            roles[0],
-            guild_id=int(GUILD_ID))        
-        await ctx.send(
-            "You are verified. Your username on site is: " + str(response.json()["Username"]),
-            ephemeral=True)
+        await ctx.author.add_role(roles[0], guild_id=int(GUILD_ID))
+        await ctx.send("You are verified. Your username on site is: " +
+                       str(response.json()["Username"]),
+                       ephemeral=True)
     elif response.status_code == 404:
         await ctx.send(
             "Could not find your account. Please connect your discord account to verify",
             ephemeral=True)
     else:
-        await ctx.send(
-            "Something went wrong. Please try again later",
-            ephemeral=True)
+        await ctx.send("Something went wrong. Please try again later",
+                       ephemeral=True)
 
 
 @bot.command(
@@ -117,9 +115,8 @@ async def verify(ctx: interactions.CommandContext):
         ),
     ],
 )
-async def profile(
-        ctx: interactions.CommandContext,
-        user: interactions.User = None):
+async def profile(ctx: interactions.CommandContext,
+                  user: interactions.User = None):
     if user is None:
         id = ctx.author.id
     else:
@@ -143,7 +140,8 @@ async def profile(
         embed = interactions.Embed(title="Profile", color=0x00d2d2)
         embed.add_field(
             "Username",
-            f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})", inline=False)
+            f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})",
+            inline=False)
         try:
             embed.add_field("Name", response.json()["name"], inline=False)
         except KeyError:
@@ -151,10 +149,9 @@ async def profile(
         except Exception as e:
             print(e)
         try:
-            embed.add_field(
-                "Organization",
-                response.json()["organization"],
-                inline=False)
+            embed.add_field("Organization",
+                            response.json()["organization"],
+                            inline=False)
         except KeyError:
             pass
         except Exception as e:
@@ -166,19 +163,16 @@ async def profile(
         if user is None:
             pass
         else:
-            embed.set_footer(
-                text=f"Requested by: {ctx.author}",
-                icon_url=ctx.author.user.avatar_url)
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")
+            embed.set_footer(text=f"Requested by: {ctx.author}",
+                             icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed, components=button)
 
 
-@bot.command(
-    name="leaderboard",
-    description="Leaderboard",
-    scope=int(GUILD_ID))
+@bot.command(name="leaderboard",
+             description="Leaderboard",
+             scope=int(GUILD_ID))
 async def leaderboard(ctx: interactions.CommandContext):
     url = base_url + "/leaderboard"
     headers = {"Authorization": AuthenticationKey}
@@ -200,29 +194,22 @@ async def leaderboard(ctx: interactions.CommandContext):
                 break
             except Exception as e:
                 print(e)
-        button = interactions.Button(
-            text="Leaderboard",
-            style=interactions.ButtonStyle.LINK,
-            label="Leaderboard",
-            url=f"{base_url[:-3]}leaderboard")
-        embed = interactions.Embed(
-            title="Leaderboard",
-            url=f"{base_url[:-3]}leaderboard",
-            description=content,
-            color=0x00d2d2)
-        embed.set_footer(
-            text=f"Requested by: {ctx.author}",
-            icon_url=ctx.author.user.avatar_url)
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")
+        button = interactions.Button(text="Leaderboard",
+                                     style=interactions.ButtonStyle.LINK,
+                                     label="Leaderboard",
+                                     url=f"{base_url[:-3]}leaderboard")
+        embed = interactions.Embed(title="Leaderboard",
+                                   url=f"{base_url[:-3]}leaderboard",
+                                   description=content,
+                                   color=0x00d2d2)
+        embed.set_footer(text=f"Requested by: {ctx.author}",
+                         icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed, components=button)
 
 
-@bot.command(
-    name="stats",
-    description="Your Stats",
-    scope=int(GUILD_ID))
+@bot.command(name="stats", description="Your Stats", scope=int(GUILD_ID))
 async def stats(ctx: interactions.CommandContext):
     url = base_url + "/stats/" + str(ctx.author.id)
     headers = {"Authorization": AuthenticationKey}
@@ -237,7 +224,8 @@ async def stats(ctx: interactions.CommandContext):
         embed = interactions.Embed(title="Stats", color=0x00d2d2)
         embed.add_field(
             "Username",
-            f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})", inline=False)
+            f"[{response.json()['username']}]({base_url[:-3]}profile/{response.json()['username']})",
+            inline=False)
         content = ""
         total_count = 0
         for i in response.json()['stats']:
@@ -249,37 +237,31 @@ async def stats(ctx: interactions.CommandContext):
         embed.add_field("Stats", content, inline=False)
         embed.add_field("Total Number of Attempts", total_count, inline=True)
         embed.set_thumbnail(url=response.json()["avatar_url"])
-        embed.set_footer(
-            text=f"Requested by: {ctx.author}",
-            icon_url=ctx.author.user.avatar_url)
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")
+        embed.set_footer(text=f"Requested by: {ctx.author}",
+                         icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed, ephemeral=True)
 
 
-@bot.command(
-    name="ban",
-    description="Ban a user",
-    scope=int(GUILD_ID),
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
-    options=[
-        interactions.Option(
-            name="user",
-            description="User",
-            type=interactions.OptionType.USER,
-            required=True,
-        ),
-        interactions.Option(
-            name="reason",
-            description="Reason",
-            type=interactions.OptionType.STRING,
-            required=True)
-    ])
-async def ban(
-        ctx: interactions.CommandContext,
-        user: interactions.Member,
-        reason: str):
+@bot.command(name="ban",
+             description="Ban a user",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+             options=[
+                 interactions.Option(
+                     name="user",
+                     description="User",
+                     type=interactions.OptionType.USER,
+                     required=True,
+                 ),
+                 interactions.Option(name="reason",
+                                     description="Reason",
+                                     type=interactions.OptionType.STRING,
+                                     required=True)
+             ])
+async def ban(ctx: interactions.CommandContext, user: interactions.Member,
+              reason: str):
     url = base_url + "/ban/" + str(user.id) + "/" + str(reason)
     headers = {"Authorization": AuthenticationKey}
     response = requests.post(url, headers=headers)
@@ -290,32 +272,28 @@ async def ban(
             color=0xFF0000)
         await ctx.send(embeds=[embed_error])
     else:
-        embed = interactions.Embed(
-            title="Success",
-            description=f"<@{user.id}> has been banned",
-            color=0x00d2d2)
-        embed.set_footer(
-            text=f"Requested by: {ctx.author}",
-            icon_url=ctx.author.user.avatar_url)
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")
+        embed = interactions.Embed(title="Success",
+                                   description=f"<@{user.id}> has been banned",
+                                   color=0x00d2d2)
+        embed.set_footer(text=f"Requested by: {ctx.author}",
+                         icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed)
 
 
-@bot.command(
-    name="unban",
-    description="Unban a user",
-    scope=int(GUILD_ID),
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR,
-    options=[
-        interactions.Option(
-            name="user",
-            description="User",
-            type=interactions.OptionType.USER,
-            required=True,
-        ),
-    ])
+@bot.command(name="unban",
+             description="Unban a user",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+             options=[
+                 interactions.Option(
+                     name="user",
+                     description="User",
+                     type=interactions.OptionType.USER,
+                     required=True,
+                 ),
+             ])
 async def unban(ctx: interactions.CommandContext, user: interactions.Member):
     url = base_url + "/unban/" + str(user.id)
     headers = {"Authorization": AuthenticationKey}
@@ -331,38 +309,36 @@ async def unban(ctx: interactions.CommandContext, user: interactions.Member):
             title="Success",
             description=f"<@{user.id}> has been unbanned",
             color=0x00d2d2)
-        embed.set_footer(
-            text=f"Requested by: {ctx.author}",
-            icon_url=ctx.author.user.avatar_url)
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")
+        embed.set_footer(text=f"Requested by: {ctx.author}",
+                         icon_url=ctx.author.user.avatar_url)
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
         await ctx.send(embeds=embed)
 
 
-@bot.command(
-    name="easteregg",
-    description="Easter Egg",
-    scope=int(GUILD_ID))
+@bot.command(name="easteregg", description="Easter Egg", scope=int(GUILD_ID))
 async def easteregg(ctx):
     modal = interactions.Modal(
         title="Easter Egg",
         custom_id="easter_egg",
-        components=[interactions.TextInput(
-            style=interactions.TextStyleType.SHORT,
-            label="Enter the easter egg...",
-            placeholder="Easter Egg",
-            custom_id="easter_egg_input",
-            required=True
-        )],
+        components=[
+            interactions.TextInput(style=interactions.TextStyleType.SHORT,
+                                   label="Enter the easter egg...",
+                                   placeholder="Easter Egg",
+                                   custom_id="easter_egg_input",
+                                   required=True)
+        ],
     )
     await ctx.popup(modal)
 
 
 @bot.modal("easter_egg")
 async def modal_response(ctx, easter_egg_input: str):
-    easter_egg_input_filtered = re.sub('[\W_]+', '', easter_egg_input.lower().replace(' ', '').strip())
-    url =  base_url + "/easteregg/" + str(ctx.author.id) + "/" + easter_egg_input_filtered
+    easter_egg_input_filtered = re.sub(
+        '[\W_]+', '',
+        easter_egg_input.lower().replace(' ', '').strip())
+    url = base_url + "/easteregg/" + str(
+        ctx.author.id) + "/" + easter_egg_input_filtered
     headers = {"Authorization": AuthenticationKey}
     response = requests.get(url, headers=headers)
     if response.status_code != 200:
@@ -377,115 +353,97 @@ async def modal_response(ctx, easter_egg_input: str):
                 title="Success",
                 description=f"{response.json()['response']}",
                 color=0x00d2d2)
-            embed.set_footer(
-                text=f"{ctx.author}",
-                icon_url=ctx.author.user.avatar_url)
-            embed.set_author(
-                name="Re-Dcrypt",
-                icon_url="https://i.imgur.com/LvqKPO7.png")
+            embed.set_footer(text=f"{ctx.author}",
+                             icon_url=ctx.author.user.avatar_url)
+            embed.set_author(name="Re-Dcrypt",
+                             icon_url="https://i.imgur.com/LvqKPO7.png")
             await ctx.send(embeds=embed, ephemeral=True)
         elif response.json()['code'] == "not_found":
             embed = interactions.Embed(
                 title="Wrong!",
                 description=f"{response.json()['response']}",
                 color=0xFF0000)
-            embed.set_footer(
-                text=f"{ctx.author}",
-                icon_url=ctx.author.user.avatar_url)
-            embed.set_author(
-                name="Re-Dcrypt",
-                icon_url="https://i.imgur.com/LvqKPO7.png")
+            embed.set_footer(text=f"{ctx.author}",
+                             icon_url=ctx.author.user.avatar_url)
+            embed.set_author(name="Re-Dcrypt",
+                             icon_url="https://i.imgur.com/LvqKPO7.png")
             await ctx.send(embeds=embed, ephemeral=True)
         elif response.json()['code'] == "claimed":
             embed = interactions.Embed(
                 title="Already Claimed!",
                 description=f"{response.json()['response']}",
                 color=0xFF0000)
-            embed.set_footer(
-                text=f"{ctx.author}",
-                icon_url=ctx.author.user.avatar_url)
-            embed.set_author(
-                name="Re-Dcrypt",
-                icon_url="https://i.imgur.com/LvqKPO7.png")
+            embed.set_footer(text=f"{ctx.author}",
+                             icon_url=ctx.author.user.avatar_url)
+            embed.set_author(name="Re-Dcrypt",
+                             icon_url="https://i.imgur.com/LvqKPO7.png")
             await ctx.send(embeds=embed, ephemeral=True)
         else:
             embed = interactions.Embed(
                 title="Error",
                 description=f"Some error occured, try again later.",
                 color=0xFF0000)
-            embed.set_footer(
-                text=f"{ctx.author}",
-                icon_url=ctx.author.user.avatar_url)
-            embed.set_author(
-                name="Re-Dcrypt",
-                icon_url="https://i.imgur.com/LvqKPO7.png")
+            embed.set_footer(text=f"{ctx.author}",
+                             icon_url=ctx.author.user.avatar_url)
+            embed.set_author(name="Re-Dcrypt",
+                             icon_url="https://i.imgur.com/LvqKPO7.png")
             await ctx.send(embeds=embed, ephemeral=True)
 
-@bot.command(
-    name="verify_button",
-    description="Verify yourself",
-    scope=int(GUILD_ID),
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+
+@bot.command(name="verify_button",
+             description="Verify yourself",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
 async def verify_button(ctx: interactions.CommandContext):
-    button = interactions.Button(
-        style=interactions.ButtonStyle.PRIMARY,
-        label="Verify",
-        custom_id="verify")
-    embed = interactions.Embed(
-        title="Verify",
-        description="Please verify yourself",
-        color=0x00d2d2)
-    embed.set_author(
-        name="Re-Dcrypt",
-        icon_url="https://i.imgur.com/LvqKPO7.png")
+    button = interactions.Button(style=interactions.ButtonStyle.PRIMARY,
+                                 label="Verify",
+                                 custom_id="verify")
+    embed = interactions.Embed(title="Verify",
+                               description="Please verify yourself",
+                               color=0x00d2d2)
+    embed.set_author(name="Re-Dcrypt",
+                     icon_url="https://i.imgur.com/LvqKPO7.png")
     await ctx.send(embeds=[embed], components=[button])
 
 
 @bot.component("verify")
 async def button_verify(ctx: interactions.CommandContext):
-    url = base_url+"/verify_discord_id/"+str(ctx.author.id)
+    url = base_url + "/verify_discord_id/" + str(ctx.author.id)
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         new_nickname = f"✔️{ctx.author.user.username} - {response.json()['Username']}"
         for guild in bot.guilds:
             if guild.id == int(GUILD_ID):
                 break
-        roles = interactions.search_iterable(
-            await guild.get_all_roles(),
-            name="Verified")
+        roles = interactions.search_iterable(await guild.get_all_roles(),
+                                             name="Verified")
         await ctx.author.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
-        await ctx.author.add_role(
-            roles[0],
-            guild_id=int(GUILD_ID))
-        await ctx.send(
-            "You are verified. Your username on site is: " + str(response.json()["Username"]),
-            ephemeral=True)
+        await ctx.author.add_role(roles[0], guild_id=int(GUILD_ID))
+        await ctx.send("You are verified. Your username on site is: " +
+                       str(response.json()["Username"]),
+                       ephemeral=True)
     elif response.status_code == 404:
         await ctx.send(
             "Could not find your account. Please connect your discord account to verify",
             ephemeral=True)
     else:
-        await ctx.send(
-            "Something went wrong. Please try again later",
-            ephemeral=True)
+        await ctx.send("Something went wrong. Please try again later",
+                       ephemeral=True)
 
 
 @bot.event(name="on_guild_member_add")
-async def on_guild_member_add(member: interactions.Member):   
-    url = base_url+"/verify_discord_id/"+str(member.id)
+async def on_guild_member_add(member: interactions.Member):
+    url = base_url + "/verify_discord_id/" + str(member.id)
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         new_nickname = f"✔️{member.user.username} - {response.json()['Username']}"
         for guild in bot.guilds:
             if guild.id == int(GUILD_ID):
                 break
-        roles = interactions.search_iterable(
-            await guild.get_all_roles(),
-            name="Verified")
+        roles = interactions.search_iterable(await guild.get_all_roles(),
+                                             name="Verified")
         await member.modify(nick=new_nickname[:32])
-        await member.add_role(
-            roles[0],
-            )
+        await member.add_role(roles[0], )
         embed = interactions.Embed(
             title="Verifed",
             description="You have been verified through the Re-Dcrypt Website",
@@ -494,64 +452,59 @@ async def on_guild_member_add(member: interactions.Member):
             name="Your Username on the website:",
             value=str(response.json()["Username"]),
         )
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")                    
-        await member.send(
-            embeds=embed
-            )
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
+        await member.send(embeds=embed)
     else:
         pass
 
 
-@bot.command(
-    name="create_invite",
-    description="Create an invite",
-    scope=int(GUILD_ID),
-    options = [ 
-        interactions.Option(
-            name="channel",
-            description="Channel to create invite in",
-            type=interactions.OptionType.CHANNEL,
-            required=True,
-        )
-    ],
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+@bot.command(name="create_invite",
+             description="Create an invite",
+             scope=int(GUILD_ID),
+             options=[
+                 interactions.Option(
+                     name="channel",
+                     description="Channel to create invite in",
+                     type=interactions.OptionType.CHANNEL,
+                     required=True,
+                 )
+             ],
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
 async def create_invite(ctx: interactions.CommandContext, channel):
     code = await channel.create_invite(max_age=0, max_uses=0)
-    await ctx.send(f"Invite created in {channel.mention}: https://discord.com/invite/{code.code}", ephemeral=True)
+    await ctx.send(
+        f"Invite created in {channel.mention}: https://discord.com/invite/{code.code}",
+        ephemeral=True)
 
 
-@bot.command(
-	name="verify_someone",
-	description="verify a user",
-	scope=int(GUILD_ID),
-	default_member_permissions=interactions.Permissions.ADMINISTRATOR,
-	options = [
-		interactions.Option(
-			name="member",
-			description="user to verify",
-			type=interactions.OptionType.USER,
-   			required=True
-		)
-	]
-)
-async def verify_someone(ctx: interactions.CommandContext, member: interactions.Member):
+@bot.command(name="verify_someone",
+             description="verify a user",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR,
+             options=[
+                 interactions.Option(name="member",
+                                     description="user to verify",
+                                     type=interactions.OptionType.USER,
+                                     required=True)
+             ])
+async def verify_someone(ctx: interactions.CommandContext,
+                         member: interactions.Member):
 
-    url = base_url+"/verify_discord_id/"+str(member.id)
+    url = base_url + "/verify_discord_id/" + str(member.id)
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         new_nickname = f"✔️{member.user.username} - {response.json()['Username']}"
         for guild in bot.guilds:
             if guild.id == int(GUILD_ID):
                 break
-        roles = interactions.search_iterable(
-            await guild.get_all_roles(),
-            name="Verified")
-        await member.modify(guild_id=int(GUILD_ID),nick=new_nickname[:32])
-        await member.add_role(guild_id=int(GUILD_ID),role=
-            roles[0],
-            )
+        roles = interactions.search_iterable(await guild.get_all_roles(),
+                                             name="Verified")
+        await member.modify(guild_id=int(GUILD_ID), nick=new_nickname[:32])
+        await member.add_role(
+            guild_id=int(GUILD_ID),
+            role=roles[0],
+        )
         embed = interactions.Embed(
             title="Verifed",
             description="You have been verified through the Re-Dcrypt Website",
@@ -560,45 +513,65 @@ async def verify_someone(ctx: interactions.CommandContext, member: interactions.
             name="Your Username on the website:",
             value=str(response.json()["Username"]),
         )
-        embed.set_author(
-            name="Re-Dcrypt",
-            icon_url="https://i.imgur.com/LvqKPO7.png")                    
-        await ctx.send(
-            embeds=embed
-            )
+        embed.set_author(name="Re-Dcrypt",
+                         icon_url="https://i.imgur.com/LvqKPO7.png")
+        await ctx.send(embeds=embed)
     else:
         await ctx.send("Error")
-	
 
 
-@bot.command(
-    name="update_ranks",
-    description="Update the ranks of the members",
-    scope=int(GUILD_ID),
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR
-)
+@bot.command(name="update_ranks",
+             description="Update the ranks of the members",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
 async def update_ranks(ctx: interactions.CommandContext):
     url = base_url + "/update_rank_all"
     response = requests.post(url, headers=headers)
     if response.status_code == 200:
         await ctx.send("Updating Ranks", ephemeral=True)
     else:
-        await ctx.send(f"Update Ranks failed\nError:\n{response.json}", ephemeral=True)
+        await ctx.send(f"Update Ranks failed\nError:\n{response.json}",
+                       ephemeral=True)
 
 
-@bot.command(
-    name="backup",
-    description="Backup the database",
-    scope=int(GUILD_ID),
-    default_member_permissions=interactions.Permissions.ADMINISTRATOR
-)
+@bot.command(name="backup",
+             description="Backup the database",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
 async def backup(ctx: interactions.CommandContext):
     url = base_url + "/backup"
     response = requests.post(url, headers=headers)
     if response.status_code == 200:
         await ctx.send("Backing Up", ephemeral=True)
     else:
-        await ctx.send(f"Backup failed\nError:\n{response.json}", ephemeral=True)
+        await ctx.send(f"Backup failed\nError:\n{response.json}",
+                       ephemeral=True)
+
+
+@bot.command(name="start_hunt",
+             description="Start Re-Dcrypt Hunt",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+async def start_hunt(ctx: interactions.CommandContext, status):
+    url = base_url + '/start_hunt'
+    response = requests.post(url, headers={"Authorization": API_Cron})
+    if response.status_code == 200:
+        await ctx.send("Hunt started", ephemeral=True)
+    else:
+        await ctx.send("Error", ephemeral=True)
+
+
+@bot.command(name="end_hunt",
+             description="End Re-Dcrypt Hunt",
+             scope=int(GUILD_ID),
+             default_member_permissions=interactions.Permissions.ADMINISTRATOR)
+async def end_hunt(ctx: interactions.CommandContext):
+    url = base_url + '/end_hunt'
+    response = requests.post(url, headers={"Authorization": API_Cron})
+    if response.status_code == 200:
+        await ctx.send("Hunt ended", ephemeral=True)
+    else:
+        await ctx.send("Error", ephemeral=True)
 
 
 bot.start()
