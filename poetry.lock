@@ -35,6 +35,20 @@ python-versions = ">=3.6.0"
 unicode_backport = ["unicodedata2"]
 
 [[package]]
+name = "discord-webhook"
+version = "0.17.0"
+description = "execute discord webhooks"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+requests = ">=2.19.1"
+
+[package.extras]
+async = ["httpx (>=0.20.0)"]
+
+[[package]]
 name = "fastapi"
 version = "0.81.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
@@ -339,12 +353,13 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "092064a1231c087e3ba7b328a2533d030a188a92ac930a3e5de4c757b87f278a"
+content-hash = "7d4e5f43c55da6980ae7d0d05f89a5d35e332934f96f0be53c633057d81d00f7"
 
 [metadata.files]
 anyio = []
 certifi = []
 charset-normalizer = []
+discord-webhook = []
 fastapi = []
 idna = []
 jedi = []

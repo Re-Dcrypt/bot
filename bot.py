@@ -5,6 +5,7 @@ from interactions.ext.fastapi import setup
 from os import getenv
 from dotenv import load_dotenv
 from fastapi import Request
+from discord_webhook import DiscordWebhook, DiscordEmbed
 
 load_dotenv()
 
@@ -576,8 +577,8 @@ async def end_hunt(ctx: interactions.CommandContext):
         await ctx.send("Error", ephemeral=True)
 
 
-@bot.command(name="fedback", description="Feedback")
-async def feedback(ctx):
+@bot.command(name="feedback", description="Feedback")
+async def feedback(ctx: interactions.CommandContext):
     modal = interactions.Modal(
         title="Feedback",
         custom_id="feedback_form",
@@ -606,7 +607,7 @@ async def feedback(ctx):
                                         label="Suggestions/Feedback",   
                                         placeholder="Suggestions/feedback",
                                         custom_id="suggestions",
-                                        required=False),
+                                        required=True),
 
         ],
     )
@@ -614,19 +615,23 @@ async def feedback(ctx):
 
 
 @bot.modal("feedback_form")
-async def modal_response_feedback(ctx, username_site: str, level: str, fav_level: str, least_fav_level: str, suggestions: str):
+async def modal_response_feedback(ctx: interactions.CommandContext, username_site: str, level: str, fav_level: str, least_fav_level: str, suggestions: str):
     webhook_url=getenv("WEBHOOK_FEEDBACK_URL")
-    webhook = webhook.Webhook.from_url(url=webhook_url)
-    embed = interactions.Embed(title="Feedback", description="Feedback from the Re-Dcrypt Hunt", color=0x00d2d2)
-    embed.add_field(name="User", value=f"{ctx.author.mention}, {ctx.author.user.username}#{ctx.author.user.discriminator}, {ctx.author.user.id}")
-    embed.add_field(name="Username on site", value=username_site)
-    embed.add_field(name="Till which level did you complete the hunt", value=level)
-    embed.add_field(name="Favourite Level", value=fav_level)
-    embed.add_field(name="Least Favourite Level", value=least_fav_level)
-    embed.add_field(name="Suggestions/Feedback", value=suggestions)
+    webhookt = DiscordWebhook(url=webhook_url)
+    embed = DiscordEmbed(title="Feedback", description="Feedback from the Re-Dcrypt Hunt",color="00d2d2")
+    embed.add_embed_field(name="User", value=f"{ctx.user.mention}\n{ctx.user.username}#{ctx.user.discriminator},\n{ctx.user.id}")
+    embed.add_embed_field(name="Username on site", value=username_site, inline=False)
+    embed.add_embed_field(name="Till which level did you complete the hunt", value=level, inline=False)
+    embed.add_embed_field(name="Favourite Level", value=fav_level, inline=False)
+    embed.add_embed_field(name="Least Favourite Level", value=least_fav_level, inline=False)
+    embed.add_embed_field(name="Suggestions/Feedback", value=suggestions, inline=False)
     embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
-    webhook.execute(embed=embed)
-    await ctx.send("Feedback Submitted", ephemeral=True)
+    webhookt.add_embed(embed)
+    response = webhookt.execute()
+    if str(response)=="<Response [200]>":
+        await ctx.send("Feedback Submitted",ephemeral=True)
+    else:
+        await ctx.send("Some error occured",ephemeral=True)
 
 
 bot.start()
