@@ -390,6 +390,8 @@ async def modal_response(ctx, easter_egg_input: str):
             await ctx.send(embeds=embed, ephemeral=True)
 
 
+
+
 @bot.command(name="verify_button",
              description="Verify yourself",
              scope=int(GUILD_ID),
@@ -572,6 +574,59 @@ async def end_hunt(ctx: interactions.CommandContext):
         await ctx.send("Hunt ended", ephemeral=True)
     else:
         await ctx.send("Error", ephemeral=True)
+
+
+@bot.command(name="fedback", description="Feedback")
+async def feedback(ctx):
+    modal = interactions.Modal(
+        title="Feedback",
+        custom_id="feedback_form",
+        components=[
+            interactions.TextInput(style=interactions.TextStyleType.SHORT,
+                                   label="Your username on site",
+                                   placeholder="Username",
+                                   custom_id="username_site",
+                                   required=True),
+            interactions.TextInput(style=interactions.TextStyleType.SHORT,
+                                      label="Till which level did you complete the hunt",
+                                        placeholder="Level",
+                                        custom_id="level",
+                                        required=True),
+            interactions.TextInput(style=interactions.TextStyleType.PARAGRAPH,
+                                        label="Favourite Level",
+                                        placeholder="Favourite Level",
+                                        custom_id="fav_level",
+                                        required=True),
+            interactions.TextInput(style=interactions.TextStyleType.PARAGRAPH,
+                                        label="Least Favourite Level",
+                                        placeholder="Least Favourite Level",
+                                        custom_id="least_fav_level",
+                                        required=True),
+            interactions.TextInput(style=interactions.TextStyleType.PARAGRAPH,
+                                        label="Suggestions/Feedback",   
+                                        placeholder="Suggestions/feedback",
+                                        custom_id="suggestions",
+                                        required=False),
+
+        ],
+    )
+    await ctx.popup(modal)
+
+
+@bot.modal("feedback_form")
+async def modal_response_feedback(ctx, username_site: str, level: str, fav_level: str, least_fav_level: str, suggestions: str):
+    webhook_url=getenv("WEBHOOK_FEEDBACK_URL")
+    webhook = webhook.Webhook.from_url(url=webhook_url)
+    embed = interactions.Embed(title="Feedback", description="Feedback from the Re-Dcrypt Hunt", color=0x00d2d2)
+    embed.add_field(name="User", value=f"{ctx.author.mention}, {ctx.author.user.username}#{ctx.author.user.discriminator}, {ctx.author.user.id}")
+    embed.add_field(name="Username on site", value=username_site)
+    embed.add_field(name="Till which level did you complete the hunt", value=level)
+    embed.add_field(name="Favourite Level", value=fav_level)
+    embed.add_field(name="Least Favourite Level", value=least_fav_level)
+    embed.add_field(name="Suggestions/Feedback", value=suggestions)
+    embed.set_author(name="Re-Dcrypt", icon_url="https://i.imgur.com/LvqKPO7.png")
+    webhook.execute(embed=embed)
+    await ctx.send("Feedback Submitted", ephemeral=True)
 
 
 bot.start()
